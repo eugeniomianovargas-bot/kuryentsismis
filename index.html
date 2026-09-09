@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#E8A33D" />
+<title>KuryenTsismis</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icon-192.png" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F7F8F5; --surface:#FFFFFF; --ink:#1F2937; --ink-soft:#5B6472; --ink-faint:#8A93A1;
+    --amber:#E8A33D; --amber-deep:#C9832A; --amber-tint:#FBEBD2;
+    --teal:#2F7C6E; --teal-tint:#E1EFEC;
+    --rust:#C0503A; --rust-tint:#F6E4DF;
+    --border:#E4E3DA; --radius:14px; --radius-sm:10px;
+  }
+  html[data-theme="dark"]{
+    --bg:#1B1F24; --surface:#242A31; --ink:#F3F4F1; --ink-soft:#A7ADB6; --ink-faint:#767D87;
+    --amber-tint:#3A2E18; --teal-tint:#173129; --rust-tint:#3A2019; --border:#333944;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{font-family:'Outfit',system-ui,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;overscroll-behavior:none;}
+  #app{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;background:var(--bg);position:relative;}
+  button{font-family:inherit;cursor:pointer;}
+  input,select,textarea{font-family:inherit;}
+
+  #loginView{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 28px;text-align:center;gap:20px;}
+  .bolt-mark{width:76px;height:76px;border-radius:22px;background:var(--amber);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(232,163,61,0.35);}
+  .bolt-mark svg{width:36px;height:36px;}
+  #loginView h1{font-size:26px;font-weight:700;margin:0;letter-spacing:-0.01em;}
+  #loginView p{color:var(--ink-soft);font-size:15px;line-height:1.5;margin:0;max-width:320px;}
+  .google-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--surface);border:1px solid var(--border);padding:14px 22px;border-radius:999px;font-size:15px;font-weight:600;color:var(--ink);box-shadow:0 2px 6px rgba(0,0,0,0.06);}
+  .google-btn:active{transform:scale(0.97);}
+  .google-btn svg{width:20px;height:20px;}
+
+  #onboardView{display:none;flex:1;flex-direction:column;padding:28px 24px;gap:16px;}
+  #onboardView.active{display:flex;}
+  .ob-toggle{display:flex;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:4px;}
+  .ob-toggle button{flex:1;border:none;background:none;padding:10px;border-radius:999px;font-size:13px;font-weight:600;color:var(--ink-soft);}
+  .ob-toggle button.active{background:var(--amber);color:#1F2937;}
+  .ob-panel{display:none;flex-direction:column;gap:14px;}
+  .ob-panel.active{display:flex;}
+  .code-display{font-size:22px;font-weight:800;letter-spacing:3px;color:var(--ink);background:var(--surface);border:1px dashed var(--border);border-radius:12px;padding:16px;text-align:center;}
+
+  #appShell{display:none;flex-direction:column;min-height:100vh;}
+  #appShell.active{display:flex;}
+  header.topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;position:sticky;top:0;background:var(--bg);z-index:5;}
+  header.topbar .title{font-size:17px;font-weight:700;letter-spacing:-0.01em;}
+  header.topbar .icon-btn{background:var(--surface);border:1px solid var(--border);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;}
+
+  main{flex:1;padding:4px 20px 100px;}
+  .view{display:none;} .view.active{display:block;}
+  .section-label{font-size:13px;font-weight:600;color:var(--ink-soft);margin:22px 0 10px;}
+  .section-label:first-child{margin-top:6px;}
+
+  .status-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;display:flex;flex-direction:column;gap:10px;}
+  .status-pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;width:fit-content;}
+  .status-pill.green{background:var(--teal-tint);color:var(--teal);}
+  .status-pill.red{background:var(--rust-tint);color:var(--rust);}
+  .status-pill.neutral{background:var(--amber-tint);color:var(--amber-deep);}
+  .status-amount{font-size:34px;font-weight:800;letter-spacing:-0.02em;}
+  .status-sub{font-size:13px;color:var(--ink-soft);}
+
+  .rank-row{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px;}
+  .rank-num{width:26px;height:26px;border-radius:50%;background:var(--amber-tint);color:var(--amber-deep);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .rank-icon{font-size:20px;flex-shrink:0;}
+  .rank-info{flex:1;min-width:0;}
+  .rank-name{font-size:14px;font-weight:600;}
+  .rank-detail{font-size:12px;color:var(--ink-soft);}
+  .rank-cost{font-size:14px;font-weight:700;white-space:nowrap;}
+
+  .empty-note{color:var(--ink-faint);font-size:13px;background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius-sm);padding:16px;text-align:center;}
+
+  .appliance-row{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px;}
+  .appliance-row .a-name{font-size:14px;font-weight:600;}
+  .appliance-row .a-sub{font-size:11px;color:var(--ink-soft);}
+  .toggle-btn{border:none;border-radius:999px;padding:9px 16px;font-size:13px;font-weight:700;background:var(--teal-tint);color:var(--teal);white-space:nowrap;}
+  .toggle-btn.on{background:var(--rust);color:#fff;}
+  .quick-btn{border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:7px 12px;font-size:12px;font-weight:600;color:var(--ink);}
+  .always-info{text-align:right;}
+  .always-info .a-name{display:block;}
+
+  .btn-primary{width:100%;background:var(--amber);color:#1F2937;border:none;padding:14px;border-radius:999px;font-size:15px;font-weight:700;box-shadow:0 4px 12px rgba(232,163,61,0.3);}
+  .btn-secondary{width:100%;background:var(--surface);color:var(--ink);border:1px solid var(--border);padding:13px;border-radius:999px;font-size:14px;font-weight:600;}
+
+  .card-form{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:16px;}
+  .field-label{font-size:12px;font-weight:600;color:var(--ink-soft);margin:14px 0 6px;}
+  .field-label:first-child{margin-top:0;}
+  select,input[type="text"],input[type="number"],textarea{width:100%;padding:12px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--ink);font-size:14px;}
+  textarea{resize:none;min-height:60px;}
+  .qty-row{display:flex;align-items:center;gap:10px;}
+  .qty-row input{width:70px;flex:none;text-align:center;}
+  .qty-btn{width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--ink);font-size:18px;font-weight:700;line-height:1;display:flex;align-items:center;justify-content:center;}
+  .tier-choice{display:flex;gap:8px;margin-top:6px;}
+  .tier-opt{flex:1;text-align:center;padding:10px 6px;border-radius:var(--radius-sm);border:1px solid var(--border);font-size:11px;font-weight:600;color:var(--ink-soft);}
+  .tier-opt.selected{border-color:var(--amber);background:var(--amber-tint);color:var(--amber-deep);}
+  .form-actions{display:flex;gap:10px;margin-top:18px;}
+  .hint-note{font-size:11px;color:var(--ink-faint);margin-top:6px;line-height:1.4;}
+
+  .manage-row{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px;}
+  .manage-row .m-info{flex:1;}
+  .manage-row .m-name{font-size:14px;font-weight:600;}
+  .manage-row .m-sub{font-size:12px;color:var(--ink-soft);}
+  .manage-row .m-note{font-size:11px;color:var(--ink-faint);margin-top:2px;font-style:italic;}
+  .manage-row .remove-x{background:none;border:none;color:var(--ink-faint);font-size:20px;padding:4px 8px;}
+
+  .tip-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-top:14px;}
+  .tip-card .tip-text{font-size:13px;color:var(--ink);line-height:1.6;}
+  .silent-note{background:var(--teal-tint);border-radius:var(--radius);padding:14px 16px;font-size:12px;color:var(--teal);margin-top:12px;line-height:1.5;}
+  .compare-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-top:14px;}
+  .compare-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:9px 0;border-bottom:1px solid var(--border);}
+  .compare-row:last-child{border-bottom:none;}
+
+  .reference-search{width:100%;padding:11px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--ink);font-size:13px;margin-bottom:10px;}
+  .ref-row{display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;margin-bottom:6px;cursor:pointer;}
+  .ref-row .r-name{flex:1;font-size:12px;font-weight:600;}
+  .ref-row .r-watts{font-size:11px;color:var(--ink-soft);width:52px;text-align:right;}
+  .ref-list{max-height:220px;overflow-y:auto;margin-bottom:14px;}
+
+  nav.bottomnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;background:var(--surface);border-top:1px solid var(--border);display:flex;padding:8px 10px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -2px 12px rgba(0,0,0,0.05);z-index:10;}
+  nav.bottomnav button{flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;color:var(--ink-faint);font-size:11px;font-weight:600;}
+  nav.bottomnav button .nav-icon{font-size:21px;}
+  nav.bottomnav button.active{color:var(--amber-deep);}
+
+  .modal-backdrop{position:fixed;inset:0;background:rgba(31,41,55,0.4);display:none;align-items:flex-end;justify-content:center;z-index:20;}
+  .modal-backdrop.active{display:flex;}
+  .modal-sheet{background:var(--bg);width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom));max-height:88vh;overflow-y:auto;}
+  .modal-sheet h3{margin:0 0 14px;font-size:17px;}
+  .modal-close{display:block;margin:0 0 10px auto;background:none;border:none;color:var(--ink-faint);font-size:22px;padding:0;}
+  .know-watts-row{display:flex;gap:8px;margin-top:6px;}
+  .kw-opt{flex:1;padding:10px 6px;text-align:center;border-radius:var(--radius-sm);border:1px solid var(--border);font-size:12px;font-weight:600;color:var(--ink-soft);}
+  .kw-opt.selected{border-color:var(--amber);background:var(--amber-tint);color:var(--amber-deep);}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="loginView">
+    <div class="bolt-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z" fill="#1F2937"/></svg></div>
+    <h1 data-i18n="appTitle">KuryenTsismis</h1>
+    <p data-i18n="tagline">Alamin kung sino ang tsismosa sa kuryente niyo — kung sino ang appliance na nagpapataas ng bill.</p>
+
+    <div id="joinCodePanel" style="display:flex;width:100%;max-width:280px;flex-direction:column;gap:10px;text-align:left;">
+      <div class="field-label" style="margin:0;">Your name</div>
+      <input type="text" id="anonNameInput" placeholder="e.g. Maria" />
+      <div class="ob-toggle">
+        <button id="anonCreateTab" class="active">Create household</button>
+        <button id="anonJoinTab">Join household</button>
+      </div>
+      <div id="anonCreateFields">
+        <div class="field-label" style="margin-top:0;">Household name</div>
+        <input type="text" id="anonHouseholdNameInput" placeholder="e.g. The Santos Home" />
+      </div>
+      <div id="anonJoinFields" style="display:none;">
+        <div class="field-label" style="margin-top:0;">Invite code from your family</div>
+        <input type="text" id="joinCodeInputLogin" placeholder="e.g. VARGAS-1234" style="text-transform:uppercase;" />
+      </div>
+      <button class="btn-primary" id="submitJoinCodeBtn">Continue</button>
+    </div>
+    <p id="loginError" style="color:var(--rust);font-size:13px;display:none;"></p>
+  </div>
+
+  <div id="appShell">
+    <header class="topbar">
+      <div class="title" id="householdTitle">KuryenTsismis</div>
+      <button class="icon-btn" id="openSettingsBtn">⚙</button>
+    </header>
+    <main>
+      <div class="view" id="view-home">
+        <div class="status-card">
+          <span class="status-pill neutral" id="statusPill" data-i18n="gettingStarted">Getting started</span>
+          <div class="status-amount" id="statusAmount">₱0</div>
+          <div class="status-sub" id="statusSub" data-i18n="estimatedSoFar">Estimated so far this month</div>
+        </div>
+        <div class="section-label" data-i18n="topSoFar">Top so far this month</div>
+        <div id="topOffenders"><div class="empty-note" data-i18n="addBelowNote">Add your appliances below to start tracking.</div></div>
+        <div class="section-label" data-i18n="quickActions">Quick actions</div>
+        <div id="quickActions"><div class="empty-note" data-i18n="noneYet">No appliances added yet.</div></div>
+      </div>
+
+      <div class="view" id="view-appliances">
+        <button class="btn-primary" id="openAddApplianceBtn" style="margin-bottom:16px;" data-i18n="addApplianceBtn">+ Add an appliance</button>
+        <div class="section-label" data-i18n="alwaysOnGroup">Always on</div>
+        <div id="group-always"><div class="empty-note" data-i18n="noneYet">None added yet.</div></div>
+        <div class="section-label" data-i18n="toggleGroup">Start / stop when used</div>
+        <div id="group-toggle"><div class="empty-note" data-i18n="noneYet">None added yet.</div></div>
+        <div class="section-label" data-i18n="quickGroup">Quick-add after use</div>
+        <div id="group-quick"><div class="empty-note" data-i18n="noneYet">None added yet.</div></div>
+      </div>
+
+      <div class="view" id="view-summary">
+        <div class="section-label" data-i18n="breakdownLabel">This month's breakdown</div>
+        <div id="summaryBreakdown"><div class="empty-note" data-i18n="nothingTracked">Nothing tracked yet.</div></div>
+        <div class="tip-card" id="tipCard" style="display:none;"><div class="tip-text" id="tipBody"></div></div>
+        <div class="silent-note" id="silentNote" style="display:none;"></div>
+
+        <div class="section-label" data-i18n="notesLabel">Notes for this month</div>
+        <div class="card-form">
+          <textarea id="monthNotesInput" data-i18n-ph="notesPlaceholder" placeholder="e.g. Higher this month because of a family gathering"></textarea>
+          <div class="form-actions"><button class="btn-secondary" id="saveNoteBtn" data-i18n="saveNote">Save note</button></div>
+        </div>
+
+        <div class="section-label" data-i18n="enterBillLabel">Enter your latest Meralco bill</div>
+        <div class="card-form">
+          <div class="field-label" data-i18n="billingMonth">Billing month</div>
+          <input type="text" id="billMonthLabel" disabled />
+          <div class="field-label" data-i18n="billAmount">Total amount on the bill (₱)</div>
+          <input type="number" inputmode="decimal" id="billAmountInput" placeholder="e.g. 4500" />
+          <div class="field-label" data-i18n="billKwh">Total kWh on the bill</div>
+          <input type="number" inputmode="decimal" id="billKwhInput" placeholder="e.g. 350" />
+          <div class="form-actions"><button class="btn-primary" id="saveBillBtn" data-i18n="saveBill">Save bill</button></div>
+        </div>
+
+        <div class="section-label" data-i18n="billHistoryLabel">Bill history</div>
+        <div id="billHistory"><div class="empty-note" data-i18n="noBillsYet">No bills saved yet.</div></div>
+      </div>
+    </main>
+
+    <nav class="bottomnav">
+      <button class="nav-btn active" data-view="home"><span class="nav-icon">🏠</span><span data-i18n="navHome">Home</span></button>
+      <button class="nav-btn" data-view="appliances"><span class="nav-icon">🔌</span><span data-i18n="navAppliances">Appliances</span></button>
+      <button class="nav-btn" data-view="summary"><span class="nav-icon">📊</span><span data-i18n="navSummary">Summary</span></button>
+    </nav>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="settingsBackdrop">
+  <div class="modal-sheet">
+    <button class="modal-close" id="closeSettingsBtn">×</button>
+    <h3 data-i18n="settingsTitle">Settings</h3>
+    <div class="card-form" style="margin-top:0;">
+      <div class="field-label" data-i18n="householdName">Household name</div>
+      <div id="settingsHouseholdName" style="font-size:15px;font-weight:600;"></div>
+      <div class="field-label" data-i18n="inviteCodeLabel">Invite code for family</div>
+      <div class="code-display" id="settingsInviteCode" style="font-size:18px;padding:12px;"></div>
+      <div class="hint-note" data-i18n="shareCodeNote">Share this code with family members so they join the same household instead of creating a new one.</div>
+
+      <div class="field-label" data-i18n="languageLabel">Language</div>
+      <div class="tier-choice">
+        <div class="tier-opt selected" id="langEnOpt">English</div>
+        <div class="tier-opt" id="langTlOpt">Tagalog</div>
+      </div>
+
+      <div class="field-label" data-i18n="themeLabel">Theme</div>
+      <div class="tier-choice">
+        <div class="tier-opt selected" id="themeLightOpt" data-i18n="lightMode">Light</div>
+        <div class="tier-opt" id="themeDarkOpt" data-i18n="darkMode">Dark</div>
+      </div>
+
+      <div class="form-actions"><button class="btn-secondary" id="signOutBtn" data-i18n="signOut">Sign out</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="addModalBackdrop">
+  <div class="modal-sheet">
+    <button class="modal-close" id="closeAddModalBtn">×</button>
+    <h3 data-i18n="addApplianceTitle">Add an appliance</h3>
+    <div class="field-label" data-i18n="pickFromList">Pick from the list, or search</div>
+    <input type="text" class="reference-search" id="referenceSearch" data-i18n-ph="searchPlaceholder" placeholder="Search appliances..." />
+    <div class="ref-list" id="referenceList"></div>
+
+    <div class="card-form">
+      <div class="field-label" data-i18n="applianceNameLabel">Name (you can edit this)</div>
+      <input type="text" id="applianceNameInput" />
+
+      <div class="field-label" data-i18n="knowWattsQ">Do you know its exact wattage?</div>
+      <div class="know-watts-row">
+        <div class="kw-opt selected" id="kwNoOpt" data-i18n="kwNo">No, use typical</div>
+        <div class="kw-opt" id="kwYesOpt" data-i18n="kwYes">Yes, I'll enter it</div>
+      </div>
+      <input type="number" id="applianceWattsInput" disabled style="margin-top:10px;" />
+      <div class="hint-note" id="wattsHint" data-i18n="wattsHintDefault">This is a typical estimate. For a more accurate number, check the wattage printed on your appliance's label if you can.</div>
+
+      <div class="field-label" data-i18n="qtyLabel">How many do you have?</div>
+      <div class="qty-row">
+        <button class="qty-btn" id="qtyMinus">−</button>
+        <input type="number" id="applianceQtyInput" value="1" min="1" />
+        <button class="qty-btn" id="qtyPlus">+</button>
+      </div>
+
+      <div class="field-label" data-i18n="howUsedLabel">How is it used?</div>
+      <div class="tier-choice" id="tierChoice">
+        <div class="tier-opt" data-tier="always" data-i18n="tierAlways">Always on</div>
+        <div class="tier-opt selected" data-tier="toggle" data-i18n="tierToggle">Start / stop</div>
+        <div class="tier-opt" data-tier="quick" data-i18n="tierQuick">Quick-add</div>
+      </div>
+
+      <div class="field-label" data-i18n="detailsLabel">Additional details (optional)</div>
+      <textarea id="applianceDetailsInput" data-i18n-ph="detailsPlaceholder" placeholder="e.g. brand, location, condition — leave blank if not needed"></textarea>
+
+      <div class="form-actions"><button class="btn-primary" id="confirmAddApplianceBtn" data-i18n="addApplianceBtn2">Add appliance</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="quickModalBackdrop">
+  <div class="modal-sheet">
+    <button class="modal-close" id="closeQuickModalBtn">×</button>
+    <h3 id="quickModalTitle" data-i18n="howLongTitle">How long was it used?</h3>
+    <div class="card-form" style="margin-top:12px;">
+      <div class="tier-choice">
+        <button class="btn-secondary quick-preset" data-min="15">+15 min</button>
+        <button class="btn-secondary quick-preset" data-min="30">+30 min</button>
+        <button class="btn-secondary quick-preset" data-min="60">+1 hr</button>
+      </div>
+      <div class="field-label" data-i18n="orMinutes">Or enter minutes</div>
+      <input type="number" id="customMinutesInput" placeholder="e.g. 45" />
+      <div class="form-actions"><button class="btn-primary" id="confirmQuickAddBtn" data-i18n="logUsageBtn">Log usage</button></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+import { getAuth, signInAnonymously, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+import { getDatabase, ref, push, set, update, remove, onValue, get } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDk-aAh3KSGEeCIXgC2VniBspBRRpiJ3XE",
+  authDomain: "appliances-tracker-1cb05.firebaseapp.com",
+  databaseURL: "https://appliances-tracker-1cb05-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "appliances-tracker-1cb05",
+  storageBucket: "appliances-tracker-1cb05.firebasestorage.app",
+  messagingSenderId: "309453324158",
+  appId: "1:309453324158:web:b054b6d980b1de392f7d2f",
+  measurementId: "G-KE7FMZR0NY"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+const DEFAULT_RATE = 12.0;
+
+// ---------- i18n ----------
+const I18N = {
+  appTitle:{en:"KuryenTsismis",tl:"KuryenTsismis"},
+  tagline:{en:"Find out which appliance is really gossiping up your electric bill.",tl:"Alamin kung sino ang tsismosa sa kuryente niyo — kung sino ang appliance na nagpapataas ng bill."},
+  signInGoogle:{en:"Sign in with Google",tl:"Mag-sign in gamit ang Google"},
+  signInNote:{en:"Everyone in the family signs in with their own Google account — no passwords to remember.",tl:"Bawat miyembro ng pamilya, sariling Google account lang — walang password na aalalahanin."},
+  setupTitle:{en:"Set up your household",tl:"I-set up ang inyong household"},
+  setupSub:{en:"Create a new one, or join your family's with their invite code.",tl:"Gumawa ng bago, o sumali gamit ang invite code ng pamilya niyo."},
+  createTab:{en:"Create household",tl:"Gumawa ng household"},
+  joinTab:{en:"Join household",tl:"Sumali sa household"},
+  householdName:{en:"Household name",tl:"Pangalan ng household"},
+  createBtn:{en:"Create household",tl:"Gumawa ng household"},
+  inviteCodeLabel:{en:"Invite code from your family",tl:"Invite code mula sa pamilya"},
+  joinBtn:{en:"Join household",tl:"Sumali sa household"},
+  gettingStarted:{en:"Getting started",tl:"Nagsisimula pa lang"},
+  estimatedSoFar:{en:"Estimated so far this month",tl:"Tinatayang gastos ngayong buwan"},
+  topSoFar:{en:"Top so far this month",tl:"Pinaka-mataas ngayong buwan"},
+  addBelowNote:{en:"Add your appliances below to start tracking.",tl:"Idagdag ang inyong appliances sa baba para magsimula."},
+  quickActions:{en:"Quick actions",tl:"Mabilisang aksyon"},
+  noneYet:{en:"None added yet.",tl:"Wala pang naidagdag."},
+  addApplianceBtn:{en:"+ Add an appliance",tl:"+ Magdagdag ng appliance"},
+  alwaysOnGroup:{en:"Always on",tl:"Laging bukas"},
+  toggleGroup:{en:"Start / stop when used",tl:"Buksan / patayin kapag ginagamit"},
+  quickGroup:{en:"Quick-add after use",tl:"Mabilis idagdag pagkatapos gamitin"},
+  breakdownLabel:{en:"This month's breakdown",tl:"Breakdown ngayong buwan"},
+  nothingTracked:{en:"Nothing tracked yet.",tl:"Wala pang na-track."},
+  notesLabel:{en:"Notes for this month",tl:"Mga tala para sa buwang ito"},
+  notesPlaceholder:{en:"e.g. Higher this month because of a family gathering",tl:"hal. Mas mataas ngayong buwan dahil sa reunion ng pamilya"},
+  saveNote:{en:"Save note",tl:"I-save ang tala"},
+  enterBillLabel:{en:"Enter your latest Meralco bill",tl:"Ilagay ang huling Meralco bill"},
+  billingMonth:{en:"Billing month",tl:"Buwan ng bill"},
+  billAmount:{en:"Total amount on the bill (₱)",tl:"Kabuuang halaga sa bill (₱)"},
+  billKwh:{en:"Total kWh on the bill",tl:"Kabuuang kWh sa bill"},
+  saveBill:{en:"Save bill",tl:"I-save ang bill"},
+  billHistoryLabel:{en:"Bill history",tl:"Kasaysayan ng bill"},
+  noBillsYet:{en:"No bills saved yet.",tl:"Wala pang na-save na bill."},
+  navHome:{en:"Home",tl:"Home"},
+  navAppliances:{en:"Appliances",tl:"Appliances"},
+  navSummary:{en:"Summary",tl:"Summary"},
+  settingsTitle:{en:"Settings",tl:"Settings"},
+  shareCodeNote:{en:"Share this code with family members so they join the same household instead of creating a new one.",tl:"I-share ang code na ito sa pamilya para sumali sila sa parehong household."},
+  languageLabel:{en:"Language",tl:"Wika"},
+  themeLabel:{en:"Theme",tl:"Tema"},
+  lightMode:{en:"Light",tl:"Maliwanag"},
+  darkMode:{en:"Dark",tl:"Madilim"},
+  signOut:{en:"Sign out",tl:"Mag-sign out"},
+  addApplianceTitle:{en:"Add an appliance",tl:"Magdagdag ng appliance"},
+  pickFromList:{en:"Pick from the list, or search",tl:"Pumili sa listahan, o maghanap"},
+  searchPlaceholder:{en:"Search appliances...",tl:"Maghanap ng appliance..."},
+  applianceNameLabel:{en:"Name (you can edit this)",tl:"Pangalan (pwedeng baguhin)"},
+  knowWattsQ:{en:"Do you know its exact wattage?",tl:"Alam niyo ba ang eksaktong wattage nito?"},
+  kwNo:{en:"No, use typical",tl:"Hindi, gamitin ang tipikal"},
+  kwYes:{en:"Yes, I'll enter it",tl:"Oo, ilalagay ko"},
+  wattsHintDefault:{en:"This is a typical estimate. For a more accurate number, check the wattage printed on your appliance's label if you can.",tl:"Tinatayang bilang lang ito. Para mas tumpak, tingnan ang wattage na nakalimbag sa label ng appliance kung kaya."},
+  wattsHintCustom:{en:"Enter the number from the appliance label or a watt meter reading.",tl:"Ilagay ang numero mula sa label ng appliance o sa watt meter."},
+  qtyLabel:{en:"How many do you have?",tl:"Ilan mayroon kayo?"},
+  howUsedLabel:{en:"How is it used?",tl:"Paano ito ginagamit?"},
+  tierAlways:{en:"Always on",tl:"Laging bukas"},
+  tierToggle:{en:"Start / stop",tl:"Buksan / patayin"},
+  tierQuick:{en:"Quick-add",tl:"Mabilis idagdag"},
+  detailsLabel:{en:"Additional details (optional)",tl:"Karagdagang detalye (opsyonal)"},
+  detailsPlaceholder:{en:"e.g. brand, location, condition — leave blank if not needed",tl:"hal. brand, lokasyon, kondisyon — iwanang blangko kung hindi kailangan"},
+  addApplianceBtn2:{en:"Add appliance",tl:"Idagdag ang appliance"},
+  howLongTitle:{en:"How long was it used?",tl:"Gaano katagal ginamit?"},
+  orMinutes:{en:"Or enter minutes",tl:"O ilagay ang minuto"},
+  logUsageBtn:{en:"Log usage",tl:"I-log ang paggamit"},
+};
+let lang = localStorage.getItem("kt_lang") || "en";
+function t(key){ return (I18N[key] && I18N[key][lang]) || (I18N[key] && I18N[key].en) || key; }
+function applyI18n(){
+  document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll("[data-i18n-ph]").forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+}
+
+// ---------- theme ----------
+function applyTheme(theme){
+  document.documentElement.setAttribute("data-theme", theme);
+  localStorage.setItem("kt_theme", theme);
+  document.getElementById("themeLightOpt").classList.toggle("selected", theme==="light");
+  document.getElementById("themeDarkOpt").classList.toggle("selected", theme==="dark");
+}
+
+const REFERENCE_APPLIANCES = [
+  { name:"Aircon 1HP (inverter)", icon:"❄️", watts:500, tier:"toggle" },
+  { name:"Aircon 1.5HP (non-inverter)", icon:"❄️", watts:1100, tier:"toggle" },
+  { name:"Water heater (shower)", icon:"🚿", watts:2000, tier:"quick" },
+  { name:"Refrigerator (2-door, energy-saving)", icon:"🧊", watts:90, tier:"always" },
+  { name:"Refrigerator (2-door, older/standard)", icon:"🧊", watts:150, tier:"always" },
+  { name:"Refrigerator (single door)", icon:"🧊", watts:130, tier:"always" },
+  { name:"Freezer (chest/upright)", icon:"🧊", watts:150, tier:"always" },
+  { name:"Washing machine", icon:"🧺", watts:400, tier:"toggle" },
+  { name:"Electric iron", icon:"👕", watts:1100, tier:"quick" },
+  { name:"Rice cooker (cooking)", icon:"🍚", watts:500, tier:"quick" },
+  { name:"Rice cooker (keep-warm)", icon:"🍚", watts:15, tier:"always" },
+  { name:"Microwave", icon:"🍲", watts:1000, tier:"quick" },
+  { name:"Electric kettle", icon:"☕", watts:1300, tier:"quick" },
+  { name:"Desktop computer", icon:"💻", watts:200, tier:"toggle" },
+  { name:"Laptop (charging)", icon:"💻", watts:55, tier:"quick" },
+  { name:"LED TV (~40\")", icon:"📺", watts:80, tier:"toggle" },
+  { name:"Stand/box electric fan", icon:"🌀", watts:60, tier:"toggle" },
+  { name:"Ceiling fan", icon:"🌀", watts:70, tier:"toggle" },
+  { name:"Exhaust fan", icon:"🌬️", watts:40, tier:"quick" },
+  { name:"WiFi router/modem", icon:"📶", watts:15, tier:"always" },
+  { name:"Water dispenser", icon:"💧", watts:90, tier:"always" },
+  { name:"CCTV system", icon:"📷", watts:20, tier:"always" },
+  { name:"Custom appliance", icon:"🔌", watts:0, tier:"toggle" },
+];
+
+const TIPS = [
+  { match:/aircon/i, body:{en:"Try raising the temperature by 1–2°C, and use start/stop so it isn't left running after everyone's asleep.",tl:"Subukang itaas ng 1–2°C ang temperatura, at gamitin ang start/stop para hindi ito naiiwang bukas habang tulog na lahat."} },
+  { match:/water heater|shower/i, body:{en:"Shorter showers and only heating water when it's actually needed can meaningfully lower this.",tl:"Ang mas maikling pagligo at pag-init ng tubig kung kailangan lang ay makakatulong nang malaki."} },
+  { match:/refrigerator|freezer/i, body:{en:"Keep the door seal clean and avoid overfilling — a fridge working harder to stay cold uses more power.",tl:"Panatilihing malinis ang seal ng pinto at iwasang labis na punuin — mas malaki ang kuryenteng ginagamit kapag mas nahihirapan itong lumamig."} },
+  { match:/washing machine/i, body:{en:"Wash full loads instead of several small ones, and use cold water when the fabric allows.",tl:"Maghugas ng puno-puno kaysa maraming maliliit na labada, at gumamit ng malamig na tubig kung pwede."} },
+  { match:/iron/i, body:{en:"Iron several pieces in one session instead of switching it on for just one or two items.",tl:"Magplantsa ng maraming damit sa isang sesyon sa halip na buksan lang para sa isa o dalawang piraso."} },
+  { match:/rice cooker/i, body:{en:"Switch off 'keep warm' once everyone's eaten instead of leaving it on for hours.",tl:"Patayin ang 'keep warm' kapag tapos na kumain ang lahat sa halip na iwanang bukas nang matagal."} },
+  { match:/kettle/i, body:{en:"Boil only the amount of water you actually need.",tl:"Magpakulo lang ng tubig na talagang kakailanganin."} },
+  { match:/computer/i, body:{en:"Set it to sleep automatically when idle instead of leaving it running.",tl:"I-set itong mag-sleep kapag idle sa halip na iwanang nakabukas."} },
+  { match:/tv/i, body:{en:"Turn it off fully instead of leaving it on standby for long periods.",tl:"Patayin nang buo sa halip na iwanan sa standby nang matagal."} },
+  { match:/fan/i, body:{en:"Fans are usually a small cost — far cheaper to run than an aircon for the same room.",tl:"Karaniwang maliit lang ang gastos ng bentilador — mas mura kaysa aircon para sa parehong kwarto."} },
+  { match:/router/i, body:{en:"Always-on but typically a tiny cost — not worth changing.",tl:"Laging bukas pero maliit lang ang gastos — hindi na kailangang baguhin."} },
+  { match:/dispenser/i, body:{en:"If it has a hot mode you rarely use, switching that off saves a bit each month.",tl:"Kung may hot mode na bihira niyong gamitin, ang pagpatay dito ay makakatipid ng konti bawat buwan."} },
+  { match:/cctv/i, body:{en:"Always-on and needed for security — not a place to cut back.",tl:"Laging bukas at kailangan para sa seguridad — hindi ito dapat bawasan."} },
+];
+function getTipBody(name){
+  const hit = TIPS.find(x => x.match.test(name));
+  const body = hit ? hit.body : {en:"Check back after a few weeks to see how much it really adds up to.",tl:"Balikan pagkatapos ng ilang linggo para makita kung magkano talaga ito."};
+  return body[lang] || body.en;
+}
+
+// ---------- state ----------
+let currentUser = null;
+let currentDisplayName = "";
+let pendingAnonAction = null;
+let householdId = null;
+let householdData = {};
+let appliances = {};
+let usageEntries = {};
+let bills = {};
+let notesByMonth = {};
+let liveTimer = null;
+
+function monthKey(d=new Date()){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`; }
+function startOfMonth(d=new Date()){ return new Date(d.getFullYear(), d.getMonth(), 1).getTime(); }
+function daysInMonth(y,m){ return new Date(y, m+1, 0).getDate(); }
+function peso(n){ return "₱" + n.toLocaleString("en-PH",{maximumFractionDigits: n<100?2:0}); }
+function getCurrentRate(){
+  const keys = Object.keys(bills).sort();
+  if(keys.length===0) return DEFAULT_RATE;
+  const latest = bills[keys[keys.length-1]];
+  if(!latest.billedKwh) return DEFAULT_RATE;
+  return latest.billedAmount / latest.billedKwh;
+}
+function costForAppliance(id, appl){
+  const watts = (appl.watts||0) * (appl.quantity||1);
+  const start = startOfMonth();
+  let minutes = 0;
+  Object.values(usageEntries).forEach(u => { if(u.applianceId===id && u.loggedAt>=start) minutes += u.minutes; });
+  if((appl.tier==="toggle"||appl.tier==="always") && appl.isOn && appl.onSince){
+    minutes += Math.max(0, (Date.now() - Math.max(appl.onSince, start))/60000);
+  }
+  const hours = minutes/60;
+  const kWh = (watts*hours)/1000;
+  return { kWh, cost: kWh*getCurrentRate(), hours };
+}
+function dailyMonthlyProjection(appl){
+  const watts = (appl.watts||0)*(appl.quantity||1);
+  const rate = getCurrentRate();
+  const dayCost = (watts*24/1000)*rate;
+  const monthCost = dayCost * daysInMonth(new Date().getFullYear(), new Date().getMonth());
+  return { dayCost, monthCost };
+}
+
+// ---------- auth ----------
+document.getElementById("signOutBtn").onclick = () => signOut(auth);
+
+function showLoginError(msg){
+  const el = document.getElementById("loginError");
+  el.textContent = msg; el.style.display = "block";
+}
+function genCode(name){
+  const base = (name||"HOME").toUpperCase().replace(/[^A-Z]/g,"").slice(0,6) || "HOME";
+  return base + "-" + Math.floor(1000+Math.random()*9000);
+}
+let anonMode = "create";
+document.getElementById("anonCreateTab").onclick = () => {
+  anonMode = "create";
+  document.getElementById("anonCreateTab").classList.add("active");
+  document.getElementById("anonJoinTab").classList.remove("active");
+  document.getElementById("anonCreateFields").style.display = "block";
+  document.getElementById("anonJoinFields").style.display = "none";
+};
+document.getElementById("anonJoinTab").onclick = () => {
+  anonMode = "join";
+  document.getElementById("anonJoinTab").classList.add("active");
+  document.getElementById("anonCreateTab").classList.remove("active");
+  document.getElementById("anonJoinFields").style.display = "block";
+  document.getElementById("anonCreateFields").style.display = "none";
+};
+document.getElementById("submitJoinCodeBtn").onclick = () => {
+  const name = document.getElementById("anonNameInput").value.trim();
+  if(!name){ showLoginError("Please enter your name."); return; }
+  if(anonMode === "create"){
+    const householdName = document.getElementById("anonHouseholdNameInput").value.trim();
+    if(!householdName){ showLoginError("Please enter a household name."); return; }
+    pendingAnonAction = { type:"create", personName:name, householdName };
+  } else {
+    const code = document.getElementById("joinCodeInputLogin").value.trim().toUpperCase();
+    if(!code){ showLoginError("Please enter the invite code."); return; }
+    pendingAnonAction = { type:"join", personName:name, code };
+  }
+  if(currentUser && currentUser.isAnonymous){
+    handlePendingAnonAction(currentUser);
+  } else {
+    signInAnonymously(auth).catch(e => showLoginError("Couldn't continue: " + e.message));
+  }
+};
+
+async function handlePendingAnonAction(user){
+  const action = pendingAnonAction;
+  pendingAnonAction = null;
+  const shell = document.getElementById("appShell");
+  const loginView = document.getElementById("loginView");
+  if(action.type === "create"){
+    const hRef = push(ref(db, "households"));
+    const hid = hRef.key;
+    const code = genCode(action.householdName);
+    await set(hRef, { name:action.householdName, inviteCode:code, createdAt:Date.now(), members:{ [user.uid]:true } });
+    await set(ref(db, "inviteCodes/"+code), hid);
+    await set(ref(db, "users/"+user.uid), { householdId:hid, displayName:action.personName, isAnonymous:true });
+    householdId = hid;
+    currentDisplayName = action.personName;
+  } else {
+    const codeSnap = await get(ref(db, "inviteCodes/"+action.code));
+    if(!codeSnap.exists()){
+      showLoginError("That invite code wasn't found. Double-check with your family.");
+      document.getElementById("joinCodePanel").style.display = "flex";
+      loginView.style.display = "flex";
+      return;
+    }
+    const hid = codeSnap.val();
+    await set(ref(db, "households/"+hid+"/members/"+user.uid), true);
+    await set(ref(db, "users/"+user.uid), { householdId:hid, displayName:action.personName, isAnonymous:true });
+    householdId = hid;
+    currentDisplayName = action.personName;
+  }
+  loginView.style.display = "none";
+  shell.classList.add("active");
+  attachHouseholdListeners();
+  startLiveTimer();
+}
+
+onAuthStateChanged(auth, async (user) => {
+  currentUser = user;
+  const loginView = document.getElementById("loginView");
+  const shell = document.getElementById("appShell");
+  if(!user){
+    loginView.style.display = "flex"; shell.classList.remove("active");
+    if(liveTimer) clearInterval(liveTimer);
+    return;
+  }
+  loginView.style.display = "none";
+  const userSnap = await get(ref(db, "users/"+user.uid));
+  const userData = userSnap.exists() ? userSnap.val() : null;
+
+  if(userData && userData.householdId){
+    householdId = userData.householdId;
+    currentDisplayName = userData.displayName || "";
+    shell.classList.add("active");
+    attachHouseholdListeners();
+    startLiveTimer();
+    return;
+  }
+
+  if(pendingAnonAction){
+    await handlePendingAnonAction(user);
+    return;
+  }
+
+  currentDisplayName = "";
+  loginView.style.display = "flex";
+});
+
+function startLiveTimer(){
+  if(liveTimer) clearInterval(liveTimer);
+  liveTimer = setInterval(() => { renderHome(); renderSummary(); }, 30000);
+}
+
+function attachHouseholdListeners(){
+  const base = "households/"+householdId;
+  onValue(ref(db, base), (snap) => { householdData = snap.val()||{}; renderHouseholdInfo(); });
+  onValue(ref(db, base+"/appliances"), (snap) => { appliances = snap.val()||{}; renderAll(); });
+  onValue(ref(db, base+"/usage"), (snap) => { usageEntries = snap.val()||{}; renderAll(); });
+  onValue(ref(db, base+"/bills"), (snap) => { bills = snap.val()||{}; renderAll(); });
+  onValue(ref(db, base+"/notes"), (snap) => { notesByMonth = snap.val()||{}; renderSummary(); });
+}
+function renderHouseholdInfo(){
+  document.getElementById("householdTitle").textContent = householdData.name || "KuryenTsismis";
+  document.getElementById("settingsHouseholdName").textContent = householdData.name || "";
+  document.getElementById("settingsInviteCode").textContent = householdData.inviteCode || "";
+}
+function renderAll(){ renderHome(); renderAppliances(); renderSummary(); }
+
+// ---------- nav ----------
+document.querySelectorAll(".nav-btn").forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    document.getElementById("view-"+btn.dataset.view).classList.add("active");
+  };
+});
+
+// ---------- settings modal ----------
+document.getElementById("openSettingsBtn").onclick = () => document.getElementById("settingsBackdrop").classList.add("active");
+document.getElementById("closeSettingsBtn").onclick = () => document.getElementById("settingsBackdrop").classList.remove("active");
+document.getElementById("langEnOpt").onclick = () => { lang="en"; localStorage.setItem("kt_lang","en"); document.getElementById("langEnOpt").classList.add("selected"); document.getElementById("langTlOpt").classList.remove("selected"); applyI18n(); renderAll(); };
+document.getElementById("langTlOpt").onclick = () => { lang="tl"; localStorage.setItem("kt_lang","tl"); document.getElementById("langTlOpt").classList.add("selected"); document.getElementById("langEnOpt").classList.remove("selected"); applyI18n(); renderAll(); };
+document.getElementById("themeLightOpt").onclick = () => applyTheme("light");
+document.getElementById("themeDarkOpt").onclick = () => applyTheme("dark");
+
+// ---------- HOME ----------
+function renderHome(){
+  const ids = Object.keys(appliances);
+  const costs = ids.map(id => ({ id, appl: appliances[id], ...costForAppliance(id, appliances[id]) }));
+  const totalCost = costs.reduce((s,c)=>s+c.cost,0);
+  document.getElementById("statusAmount").textContent = peso(totalCost);
+
+  const daysElapsed = Math.max(1, (Date.now()-startOfMonth())/86400000);
+  const dailyRate = totalCost/daysElapsed;
+  const billKeys = Object.keys(bills).sort();
+  const pill = document.getElementById("statusPill");
+  if(billKeys.length===0){
+    pill.className="status-pill neutral"; pill.textContent=t("gettingStarted");
+  } else {
+    const lastKey = billKeys[billKeys.length-1];
+    const lastBill = bills[lastKey];
+    const [yy,mm] = lastKey.split("-").map(Number);
+    const refDaily = lastBill.billedAmount / daysInMonth(yy, mm-1);
+    if(dailyRate < refDaily*0.95){ pill.className="status-pill green"; pill.textContent = lang==="tl"?"Mas mababa kaysa noong nakaraan":"Trending lower than last month"; }
+    else if(dailyRate > refDaily*1.05){ pill.className="status-pill red"; pill.textContent = lang==="tl"?"Mas mataas kaysa noong nakaraan":"Trending higher than last month"; }
+    else { pill.className="status-pill neutral"; pill.textContent = lang==="tl"?"Katulad lang ng nakaraang buwan":"About the same as last month"; }
+  }
+
+  const top = costs.filter(c=>c.cost>0).sort((a,b)=>b.cost-a.cost).slice(0,3);
+  const topEl = document.getElementById("topOffenders");
+  topEl.innerHTML = "";
+  if(top.length===0){ topEl.innerHTML = `<div class="empty-note">${t("addBelowNote")}</div>`; }
+  else top.forEach((c,i) => {
+    topEl.insertAdjacentHTML("beforeend", `<div class="rank-row"><div class="rank-num">${i+1}</div><div class="rank-icon">${c.appl.icon||"🔌"}</div><div class="rank-info"><div class="rank-name">${c.appl.name}</div><div class="rank-detail">${c.kWh.toFixed(1)} kWh</div></div><div class="rank-cost">${peso(c.cost)}</div></div>`);
+  });
+
+  const qEl = document.getElementById("quickActions");
+  qEl.innerHTML = "";
+  if(ids.length===0){ qEl.innerHTML = `<div class="empty-note">${t("noneYet")}</div>`; }
+  else {
+    ids.forEach(id => {
+      const a = appliances[id];
+      if(a.tier==="always"){
+        const proj = dailyMonthlyProjection(a);
+        qEl.insertAdjacentHTML("beforeend", `<div class="appliance-row"><div class="rank-icon">${a.icon||"🔌"}</div><div style="flex:1;"><div class="a-name">${a.name}</div><div class="a-sub">≈ ${peso(proj.dayCost)}/day · ${peso(proj.monthCost)}/mo</div></div><button class="toggle-btn ${a.isOn?'on':''}" data-toggle-id="${id}">${a.isOn ? (lang==="tl"?"I-mark off":"Mark off") : (lang==="tl"?"Bumalik online":"Turn back on")}</button></div>`);
+      } else if(a.tier==="toggle"){
+        qEl.insertAdjacentHTML("beforeend", `<div class="appliance-row"><div class="rank-icon">${a.icon||"🔌"}</div><div style="flex:1;"><div class="a-name">${a.name}</div><div class="a-sub">${a.isOn ? (lang==="tl"?"Tumatakbo ngayon":"Running now") : (lang==="tl"?"Naka-off":"Off")}</div></div><button class="toggle-btn ${a.isOn?'on':''}" data-toggle-id="${id}">${a.isOn ? (lang==="tl"?"Patayin":"Turn off") : (lang==="tl"?"Buksan":"Turn on")}</button></div>`);
+      } else {
+        qEl.insertAdjacentHTML("beforeend", `<div class="appliance-row"><div class="rank-icon">${a.icon||"🔌"}</div><div style="flex:1;"><div class="a-name">${a.name}</div><div class="a-sub">${lang==="tl"?"Mabilis idagdag pagkatapos gamitin":"Quick-add after use"}</div></div><button class="quick-btn" data-quick-id="${id}">${lang==="tl"?"I-log":"Log usage"}</button></div>`);
+      }
+    });
+    qEl.querySelectorAll("[data-toggle-id]").forEach(b => b.onclick = () => toggleAppliance(b.dataset.toggleId));
+    qEl.querySelectorAll("[data-quick-id]").forEach(b => b.onclick = () => openQuickModal(b.dataset.quickId));
+  }
+}
+
+function toggleAppliance(id){
+  const a = appliances[id];
+  const base = "households/"+householdId+"/appliances/"+id;
+  if(a.isOn){
+    const minutes = Math.max(0, (Date.now()-(a.onSince||Date.now()))/60000);
+    const usageRef = push(ref(db, "households/"+householdId+"/usage"));
+    set(usageRef, { applianceId:id, minutes, loggedAt:Date.now(), loggedBy: currentDisplayName });
+    update(ref(db, base), { isOn:false, onSince:null });
+  } else {
+    update(ref(db, base), { isOn:true, onSince:Date.now() });
+  }
+}
+
+let quickTargetId = null;
+function openQuickModal(id){
+  quickTargetId = id;
+  document.getElementById("quickModalTitle").textContent = t("howLongTitle") + " (" + appliances[id].name + ")";
+  document.getElementById("customMinutesInput").value = "";
+  document.getElementById("quickModalBackdrop").classList.add("active");
+}
+document.getElementById("closeQuickModalBtn").onclick = () => document.getElementById("quickModalBackdrop").classList.remove("active");
+document.querySelectorAll(".quick-preset").forEach(btn => btn.onclick = () => logQuickUsage(parseInt(btn.dataset.min,10)));
+document.getElementById("confirmQuickAddBtn").onclick = () => {
+  const v = parseInt(document.getElementById("customMinutesInput").value,10);
+  if(v>0) logQuickUsage(v);
+};
+function logQuickUsage(minutes){
+  const usageRef = push(ref(db, "households/"+householdId+"/usage"));
+  set(usageRef, { applianceId:quickTargetId, minutes, loggedAt:Date.now(), loggedBy: currentDisplayName });
+  document.getElementById("quickModalBackdrop").classList.remove("active");
+}
+
+// ---------- APPLIANCES ----------
+function renderAppliances(){
+  const groups = { always:[], toggle:[], quick:[] };
+  Object.entries(appliances).forEach(([id,a]) => groups[a.tier]?.push([id,a]));
+  const render = (elId, list) => {
+    const el = document.getElementById(elId);
+    el.innerHTML = "";
+    if(list.length===0){ el.innerHTML = `<div class="empty-note">${t("noneYet")}</div>`; return; }
+    list.forEach(([id,a]) => {
+      el.insertAdjacentHTML("beforeend", `<div class="manage-row"><div class="rank-icon">${a.icon||"🔌"}</div><div class="m-info"><div class="m-name">${a.name}</div><div class="m-sub">${a.watts}W × ${a.quantity||1}</div>${a.notes?`<div class="m-note">${a.notes}</div>`:""}</div><button class="remove-x" data-remove-id="${id}">×</button></div>`);
+    });
+    el.querySelectorAll("[data-remove-id]").forEach(b => b.onclick = () => {
+      if(confirm(lang==="tl"?"Alisin ang appliance na ito?":"Remove this appliance?")) remove(ref(db, "households/"+householdId+"/appliances/"+b.dataset.removeId));
+    });
+  };
+  render("group-always", groups.always);
+  render("group-toggle", groups.toggle);
+  render("group-quick", groups.quick);
+}
+
+// ---------- add appliance modal ----------
+let selectedTier = "toggle", selectedRefIcon = "🔌", knowWatts = false;
+function renderReferenceList(filter){
+  const listEl = document.getElementById("referenceList");
+  listEl.innerHTML = "";
+  const f = (filter||"").toLowerCase();
+  REFERENCE_APPLIANCES.filter(r => r.name.toLowerCase().includes(f)).forEach((r) => {
+    listEl.insertAdjacentHTML("beforeend", `<div class="ref-row" data-ref="${r.name}"><span>${r.icon}</span><div class="r-name">${r.name}</div><div class="r-watts">${r.watts}W</div></div>`);
+  });
+  listEl.querySelectorAll(".ref-row").forEach(row => row.onclick = () => {
+    const r = REFERENCE_APPLIANCES.find(x => x.name === row.dataset.ref);
+    applyReferenceToForm(r);
+  });
+}
+function applyReferenceToForm(r){
+  document.getElementById("applianceNameInput").value = r.name;
+  document.getElementById("applianceWattsInput").value = r.watts;
+  selectedRefIcon = r.icon;
+  selectedTier = r.tier;
+  document.querySelectorAll(".tier-opt[data-tier]").forEach(t2 => t2.classList.toggle("selected", t2.dataset.tier===selectedTier));
+  setKnowWatts(false);
+}
+document.getElementById("referenceSearch").oninput = (e) => renderReferenceList(e.target.value);
+document.querySelectorAll(".tier-opt[data-tier]").forEach(t2 => t2.onclick = () => { selectedTier=t2.dataset.tier; document.querySelectorAll(".tier-opt[data-tier]").forEach(x=>x.classList.toggle("selected", x===t2)); });
+document.getElementById("qtyMinus").onclick = () => { const i=document.getElementById("applianceQtyInput"); i.value=Math.max(1,(parseInt(i.value||1,10))-1); };
+document.getElementById("qtyPlus").onclick = () => { const i=document.getElementById("applianceQtyInput"); i.value=(parseInt(i.value||1,10))+1; };
+
+function setKnowWatts(val){
+  knowWatts = val;
+  document.getElementById("kwYesOpt").classList.toggle("selected", val);
+  document.getElementById("kwNoOpt").classList.toggle("selected", !val);
+  const wattsInput = document.getElementById("applianceWattsInput");
+  wattsInput.disabled = !val;
+  document.getElementById("wattsHint").textContent = val ? t("wattsHintCustom") : t("wattsHintDefault");
+}
+document.getElementById("kwYesOpt").onclick = () => setKnowWatts(true);
+document.getElementById("kwNoOpt").onclick = () => setKnowWatts(false);
+
+document.getElementById("openAddApplianceBtn").onclick = () => {
+  document.getElementById("referenceSearch").value = "";
+  renderReferenceList("");
+  applyReferenceToForm(REFERENCE_APPLIANCES[0]);
+  document.getElementById("applianceQtyInput").value = 1;
+  document.getElementById("applianceDetailsInput").value = "";
+  document.getElementById("addModalBackdrop").classList.add("active");
+};
+document.getElementById("closeAddModalBtn").onclick = () => document.getElementById("addModalBackdrop").classList.remove("active");
+
+document.getElementById("confirmAddApplianceBtn").onclick = () => {
+  const name = document.getElementById("applianceNameInput").value.trim();
+  const watts = parseFloat(document.getElementById("applianceWattsInput").value) || 0;
+  const qty = parseInt(document.getElementById("applianceQtyInput").value,10) || 1;
+  const notes = document.getElementById("applianceDetailsInput").value.trim();
+  if(!name){ alert(lang==="tl"?"Maglagay ng pangalan.":"Please enter a name."); return; }
+  const newRef = push(ref(db, "households/"+householdId+"/appliances"));
+  set(newRef, {
+    name, watts, quantity:qty, tier:selectedTier, icon:selectedRefIcon, notes,
+    isOn: selectedTier==="always" ? true : false,
+    onSince: selectedTier==="always" ? Date.now() : null,
+    addedBy: currentDisplayName, addedAt: Date.now()
+  });
+  document.getElementById("addModalBackdrop").classList.remove("active");
+};
+
+// ---------- SUMMARY ----------
+function renderSummary(){
+  const ids = Object.keys(appliances);
+  const costs = ids.map(id => ({ id, appl: appliances[id], ...costForAppliance(id, appliances[id]) })).filter(c=>c.cost>0).sort((a,b)=>b.cost-a.cost);
+  const total = costs.reduce((s,c)=>s+c.cost,0);
+
+  const el = document.getElementById("summaryBreakdown");
+  el.innerHTML = "";
+  if(costs.length===0){
+    el.innerHTML = `<div class="empty-note">${t("nothingTracked")}</div>`;
+    document.getElementById("tipCard").style.display = "none";
+    document.getElementById("silentNote").style.display = "none";
+  } else {
+    costs.forEach((c,i) => {
+      const pct = total>0 ? Math.round((c.cost/total)*100) : 0;
+      el.insertAdjacentHTML("beforeend", `<div class="rank-row"><div class="rank-num">${i+1}</div><div class="rank-icon">${c.appl.icon||"🔌"}</div><div class="rank-info"><div class="rank-name">${c.appl.name}</div><div class="rank-detail">${pct}%</div></div><div class="rank-cost">${peso(c.cost)}</div></div>`);
+    });
+    const topC = costs[0];
+    const pct0 = total>0 ? Math.round((topC.cost/total)*100) : 0;
+    const explain = lang==="tl"
+      ? `${topC.appl.name} — ${pct0}% ng na-track na gastos. Tumakbo ito ng humigit-kumulang ${topC.hours.toFixed(1)} oras sa ${topC.appl.watts}W — kaya umaabot ito sa ${peso(topC.cost)}. ${getTipBody(topC.appl.name)}`
+      : `${topC.appl.name} — ${pct0}% of tracked cost. It ran about ${topC.hours.toFixed(1)} hours at ${topC.appl.watts}W — that's what adds up to ${peso(topC.cost)}. ${getTipBody(topC.appl.name)}`;
+    document.getElementById("tipBody").textContent = explain;
+    document.getElementById("tipCard").style.display = "block";
+
+    const alwaysCost = costs.filter(c => c.appl.tier==="always").reduce((s,c)=>s+c.cost,0);
+    if(alwaysCost > 0){
+      document.getElementById("silentNote").textContent = lang==="tl"
+        ? `Ang mga laging-bukas na appliances ay umabot ng ${peso(alwaysCost)} ngayong buwan — maliit isa-isa, pero patuloy itong tumatakbo.`
+        : `Always-on appliances added up to ${peso(alwaysCost)} this month — small individually, but steady.`;
+      document.getElementById("silentNote").style.display = "block";
+    } else {
+      document.getElementById("silentNote").style.display = "none";
+    }
+  }
+
+  document.getElementById("billMonthLabel").value = new Date().toLocaleString(lang==="tl"?"fil-PH":"en-PH", { month:"long", year:"numeric" });
+  document.getElementById("monthNotesInput").value = (notesByMonth[monthKey()] && notesByMonth[monthKey()].text) || "";
+
+  const billKeys = Object.keys(bills).sort().reverse();
+  const histEl = document.getElementById("billHistory");
+  histEl.innerHTML = "";
+  if(billKeys.length===0){ histEl.innerHTML = `<div class="empty-note">${t("noBillsYet")}</div>`; }
+  else {
+    billKeys.forEach((k,idx) => {
+      const b = bills[k];
+      const [yy,mm] = k.split("-").map(Number);
+      const label = new Date(yy, mm-1, 1).toLocaleString(lang==="tl"?"fil-PH":"en-PH", { month:"long", year:"numeric" });
+      const prevKey = billKeys[idx+1];
+      let arrow = "";
+      if(prevKey){
+        const prev = bills[prevKey];
+        if(b.billedAmount < prev.billedAmount) arrow = `<span style="color:#0F6E56;">▼</span>`;
+        else if(b.billedAmount > prev.billedAmount) arrow = `<span style="color:#993C1D;">▲</span>`;
+      }
+      histEl.insertAdjacentHTML("beforeend", `<div class="compare-row"><span>${label}</span><span style="font-weight:700;">${peso(b.billedAmount)}</span>${arrow}</div>`);
+    });
+  }
+}
+
+document.getElementById("saveBillBtn").onclick = () => {
+  const amount = parseFloat(document.getElementById("billAmountInput").value);
+  const kwh = parseFloat(document.getElementById("billKwhInput").value);
+  if(!amount || !kwh){ alert(lang==="tl"?"Maglagay ng halaga at kWh.":"Please enter both the amount and the kWh from your bill."); return; }
+  const ids = Object.keys(appliances);
+  const total = ids.reduce((s,id) => s + costForAppliance(id, appliances[id]).cost, 0);
+  set(ref(db, "households/"+householdId+"/bills/"+monthKey()), {
+    billedAmount: amount, billedKwh: kwh, estimatedAtSaveTime: total,
+    enteredBy: currentDisplayName, enteredAt: Date.now()
+  });
+  document.getElementById("billAmountInput").value = "";
+  document.getElementById("billKwhInput").value = "";
+};
+document.getElementById("saveNoteBtn").onclick = () => {
+  const text = document.getElementById("monthNotesInput").value.trim();
+  set(ref(db, "households/"+householdId+"/notes/"+monthKey()), { text, updatedBy: currentDisplayName, updatedAt: Date.now() });
+};
+
+// ---------- init ----------
+applyTheme(localStorage.getItem("kt_theme") || "light");
+applyI18n();
+document.getElementById("langEnOpt").classList.toggle("selected", lang==="en");
+document.getElementById("langTlOpt").classList.toggle("selected", lang==="tl");
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+</script>
+</body>
+</html>
